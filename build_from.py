@@ -1,6 +1,7 @@
 import codecs
 import logging
 import sys
+import cProfile, StringIO, pstats
 
 try:
     import requests_cache
@@ -20,6 +21,7 @@ logger.addHandler(logging.StreamHandler())
 
 
 if __name__ == "__main__":
+    profiler = None
     if len(sys.argv) < 6:
         print("Usage: python build_from.py regulation.xml title "
               + "notice_doc_# act_title act_section (Generate diffs? "
@@ -27,6 +29,11 @@ if __name__ == "__main__":
         print("  e.g. python build_from.py rege.txt 12 2011-31725 15 1693 "
               + "False")
         exit()
+    if len(sys.argv) > 6:
+        if sys.argv[6] == "profile":
+            has_profiler = True
+            profiler = cProfile.Profile()
+            profiler.enable()
 
     with codecs.open(sys.argv[1], 'r', 'utf-8') as f:
         reg = f.read()
@@ -75,3 +82,11 @@ if __name__ == "__main__":
                 builder.writer.diff(
                     reg_tree.label_id(), lhs_version, rhs_version
                 ).write(comparer.changes)
+
+    if profiler is not None:
+        profiler.disable()
+        s = StringIO.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print s.getvalue()
