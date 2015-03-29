@@ -29,9 +29,12 @@ if __name__ == "__main__":
         print("  e.g. python build_from.py rege.txt 12 2011-31725 15 1693 "
               + "False")
         exit()
+
     if len(sys.argv) > 6:
-        if sys.argv[6] == "profile":
-            has_profiler = True
+        if sys.argv[6].find("profile") > -1:
+            sortby = 'tottime'
+            if len(sys.argv[6]) > 7:
+              sortby = sys.argv[6]
             profiler = cProfile.Profile()
             profiler.enable()
 
@@ -85,8 +88,7 @@ if __name__ == "__main__":
 
     if profiler is not None:
         profiler.disable()
-        s = StringIO.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        print s.getvalue()
+        sstream = StringIO.StringIO()
+        profilestats = pstats.Stats(profiler, stream=sstream).sort_stats(sortby)
+        profilestats.print_stats()
+        print sstream.getvalue()
